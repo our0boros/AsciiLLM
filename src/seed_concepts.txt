@@ -1,0 +1,83 @@
+# 花草鸟木
+cherry blossom tree
+rosemary bush
+butterfly orchid
+peacock feather
+redwood forest
+sunflower field
+parrot in a cage
+lotus flower pond
+bamboo grove
+hummingbird feeder
+
+# 建筑类型
+ancient castle
+traditional chinese temple
+sleek modern skyscraper
+medieval village
+futuristic space station
+tropical beach resort
+japanese zen garden
+steampunk airship port
+gothic cathedral
+underwater research facility
+
+# 艺术风格
+impressionist landscape
+cubist portrait
+surrealist dreamscape
+abstract expressionist painting
+art deco architecture
+pixel art scene
+watercolor painting
+oil painting still life
+comic book style
+anime character design
+
+# 自然景观
+volcanic eruption
+glacial lake
+waterfall in rainforest
+desert oasis
+tundra landscape
+coral reef
+alpine meadow
+tornado formation
+golden hour mountains
+coastal cliff at sunset
+
+# 人物类型
+wise old man with beard
+young businesswoman in suit
+playful child with balloon
+elegant ballerina
+samurai warrior
+fairy tale princess
+street artist painting
+astronaut in space
+chef in kitchen
+rock musician performing
+
+# 车辆类型
+classic vintage car
+futuristic flying car
+steam locomotive
+off-road jeep in desert
+high-speed bullet train
+sailing yacht
+motorcycle on mountain road
+space shuttle launching
+tractor in field
+delivery drone swarm
+
+# 各种物体
+turn-of-the-century pocket watch
+glowing crystal ball
+ancient egyptian artifact
+modern smart home device
+handmade ceramic vase
+gold jewelry collection
+vintage typewriter
+holographic display
+treasure chest with gold
+magical potion bottle
