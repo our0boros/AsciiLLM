@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 # ========== 0. 参数配置 ==========
 def parse_args():
     parser = argparse.ArgumentParser(description='批量生成ASCII字符画数据集')
-    parser.add_argument('--n-prompts', type=int, default=20, help='生成的提示词总数')
+    parser.add_argument('--n-prompts', type=int, default=200_000, help='生成的提示词总数')
     parser.add_argument('--n-images', type=int, default=10, help='每个提示词生成的图像数量')
     parser.add_argument('--output-dir', type=str, default='data/ascii_art_dataset', help='输出目录')
     parser.add_argument('--device', type=str, default=None, help='使用的设备(cuda/cpu)')
@@ -96,9 +96,7 @@ def load_seed_concepts():
     if not concepts_file.exists():
         logger.error(f'种子概念文件不存在: {concepts_file}')
         # 使用默认概念作为备用
-        return [
-            'cyberpunk city', 'sunset beach', 'mechanical cat', 'forest spirit', 'desert pyramid'
-        ]
+        raise FileNotFoundError(f'种子概念文件不存在: {concepts_file}')
     
     concepts = []
     with concepts_file.open('r', encoding='utf-8') as f:
@@ -181,7 +179,7 @@ def main():
     (OUT_DIR / 'orig').mkdir(exist_ok=True)
     
     # 定义字符画参数
-    LONG_EDGE_CHARS = [8, 16, 32, 64, 128]
+    LONG_EDGE_CHARS = [-1, 8, 16, 32, 64, 96, 128]
     COLOR_OPTIONS = [False, ]  # 黑白/彩色
     MODES = ['normal', 'complex', 'braille']  # 三种模式
     
@@ -231,10 +229,16 @@ def main():
             img.save(orig_path)
             logger.debug(f'保存原图: {orig_path}')
 
-            # 遍历所有字符画参数组合（颜色/黑白 * 3种模式 = 6种组合）
+            # 计算总组合数和当前图像的总进度
+            total_combinations = len(COLOR_OPTIONS) * len(MODES) * len(LONG_EDGE_CHARS)
+            combination_count = 0
+            
+            # 遍历所有字符画参数组合（颜色/黑白 * 3种模式 * 5种字符长度 = 15种组合）
             for color in COLOR_OPTIONS:
                 for mode in MODES:
                     for long in LONG_EDGE_CHARS:
+                        combination_count += 1
+                        logger.info(f'处理图像 {count_img:06d}/{len(prompts)*args.n_images}, 组合 {combination_count}/{total_combinations} (颜色: {"彩色" if color else "黑白"}, 模式: {mode}, 长边字符数: {long})')
                         try:
                             # 使用converter.py生成ASCII字符画
                             ascii_art = generate_ascii_from_converter(img, long, color, mode)

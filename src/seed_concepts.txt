@@ -9,6 +9,22 @@ parrot in a cage
 lotus flower pond
 bamboo grove
 hummingbird feeder
+rose garden
+tulip field
+pine forest
+cactus desert
+orchid greenhouse
+butterfly garden
+honeybee hive
+sakura blossom
+daisy meadow
+magnolia tree
+willow tree by river
+lavender field
+water lily pond
+oak tree forest
+palm tree beach
+
 
 # 建筑类型
 ancient castle
@@ -21,6 +37,22 @@ japanese zen garden
 steampunk airship port
 gothic cathedral
 underwater research facility
+victorian mansion
+log cabin in woods
+modern glass house
+ancient greek temple
+pyramid in desert
+wooden barn
+treehouse in forest
+space elevator
+suburban house
+city apartment
+train station
+airport terminal
+library building
+museum architecture
+bridge over river
+
 
 # 艺术风格
 impressionist landscape
@@ -33,6 +65,22 @@ watercolor painting
 oil painting still life
 comic book style
 anime character design
+renaissance painting
+baroque sculpture
+pop art poster
+minimalist design
+art nouveau pattern
+manga style
+cartoon illustration
+sketch drawing
+pastel artwork
+pointillism painting
+graffiti art
+street art mural
+ink wash painting
+collage art
+3D digital art
+
 
 # 自然景观
 volcanic eruption
@@ -45,6 +93,22 @@ alpine meadow
 tornado formation
 golden hour mountains
 coastal cliff at sunset
+beach at sunrise
+mountain range
+river flowing through valley
+canyon with river
+arctic iceberg
+forest after rain
+savanna with acacia trees
+wetland with reeds
+cave with stalactites
+geyser erupting
+island in ocean
+fjord landscape
+plateau scenery
+volcanic crater
+waterfall into lake
+
 
 # 人物类型
 wise old man with beard
@@ -57,6 +121,118 @@ street artist painting
 astronaut in space
 chef in kitchen
 rock musician performing
+firefighter in action
+nurse caring for patient
+doctor in surgery
+teacher in classroom
+student studying
+artist painting
+musician playing piano
+dancer performing
+athlete running
+police officer on duty
+chef baking
+gardener planting
+writer typing
+photographer taking photos
+athlete playing soccer
+old woman with knitting
+young man playing guitar
+small child laughing
+ballet dancer en pointe
+samurai in armor
+princess with crown
+street performer juggling
+astronaut in spacewalk
+chef chopping vegetables
+rock singer on stage
+firefighter carrying hose
+nurse with stethoscope
+doctor with clipboard
+teacher writing on board
+student raising hand
+artist sculpting clay
+musician playing violin
+dancer in flowing dress
+athlete jumping hurdles
+police officer on motorcycle
+chef decorating cake
+gardener trimming hedges
+writer reading book
+photographer with tripod
+athlete lifting weights
+yoga instructor in pose
+martial artist meditating
+barista making coffee
+actor performing on stage
+model posing for photo
+construction worker with tool belt
+scientist in lab coat
+mail carrier with letters
+bus driver at steering wheel
+waiter carrying tray
+hair stylist cutting hair
+fashion designer sketching
+mechanic working on car
+painter on ladder
+sculptor with chisel
+florist arranging flowers
+zookeeper feeding animals
+vet examining pet
+pilot in cockpit
+lifeguard watching beach
+detective with magnifying glass
+soldier in uniform
+witch with broom
+wizard with staff
+pirate with eyepatch
+knight in shining armor
+princess in tower
+king on throne
+queen with scepter
+jester with hat
+monk praying
+nun in habit
+shaman performing ritual
+viking with axe
+cowboy on horse
+cowgirl with lasso
+ninja in black
+samurai with katana
+archer with bow
+fencer with sword
+knight fighting dragon
+warrior with shield
+assassin in shadows
+mercenary with guns
+spy with gadgets
+superhero in costume
+villain with evil laugh
+robot with lasers
+alien with tentacles
+elf with pointed ears
+dwarf with axe
+troll under bridge
+goblin in cave
+ogre with club
+zombie with arms outstretched
+vampire with fangs
+werewolf in moonlight
+ghost floating
+mermaid with tail
+centaur with horse body
+sphinx with wings
+unicorn with horn
+pegasus flying
+phoenix rising from ashes
+griffin with eagle head
+hydra with multiple heads
+chimera with lion body
+minotaur with bull head
+cyclops with one eye
+medusa with snakes for hair
+
+
 
 # 车辆类型
 classic vintage car
@@ -69,6 +245,22 @@ motorcycle on mountain road
 space shuttle launching
 tractor in field
 delivery drone swarm
+sports car racing
+hot air balloon
+submarine underwater
+helicopter flying
+cruise ship
+bicycle on road
+truck carrying goods
+ambulance emergency
+fire truck
+train traveling through mountains
+boat on lake
+scooter in city
+spaceship in orbit
+bus on highway
+car driving through rain
+
 
 # 各种物体
 turn-of-the-century pocket watch
@@ -81,3 +273,729 @@ vintage typewriter
 holographic display
 treasure chest with gold
 magical potion bottle
+antique book
+vintage camera
+glass sculpture
+wooden sculpture
+metal robot
+leather journal
+wine bottle and glass
+coffee cup
+tea set
+candle on table
+clock tower
+puzzle piece
+musical instrument
+painting brush
+scissors and paper
+# 天气现象
+rainbow after rain
+storm with lightning
+snowfall
+foggy morning
+sunny day
+cloudy sky
+thunderstorm
+blizzard
+heatwave
+mist over water
+hailstorm
+sandstorm
+windy day
+drizzling rain
+polar lights
+# 季节
+spring with blooming flowers
+summer with green leaves
+autumn with colorful leaves
+winter with snow
+cherry blossom season
+rainy season
+dry season
+harvest season
+winter solstice
+summer solstice
+equinox
+changing seasons
+early spring
+late autumn
+early winter
+# 动物
+lion in savanna
+tiger in jungle
+eagle flying
+whale in ocean
+dolphin jumping
+rabbit in grass
+turtle in water
+butterfly flying
+bird singing
+dog playing
+cat sleeping
+fish swimming
+horse running
+deer in forest
+fox in snow
+bear in forest
+wolf howling at moon
+cheetah running fast
+penguin sliding on ice
+giraffe eating leaves
+zebra with stripes
+koala in tree
+panda eating bamboo
+monkey swinging
+hippo in water
+rhino with horn
+elephant with trunk
+kangaroo hopping
+koala sleeping
+opossum hanging
+squirrel gathering nuts
+beaver building dam
+raccoon raiding garbage
+otter playing
+skunk spraying
+badger digging
+mole underground
+bat flying at night
+owl hunting at night
+hawk soaring
+hummingbird drinking nectar
+woodpecker pecking
+flamingo standing on one leg
+peacock displaying feathers
+parrot talking
+penguin waddling
+seal balancing ball
+walrus with tusks
+shark swimming
+octopus changing colors
+jellyfish floating
+lobster with claws
+crab scuttling
+turtle laying eggs
+alligator sunning
+snake slithering
+lizard basking
+frog jumping
+toad croaking
+spider spinning web
+scorpion stinging
+bee collecting honey
+ant carrying food
+grasshopper hopping
+ladybug crawling
+firefly glowing at night
+centipede crawling
+millipede with many legs
+seahorse floating
+cuttlefish changing color
+starfish on beach
+sea urchin with spines
+seagull flying
+pelican diving
+crane standing
+swan swimming
+duck quacking
+goose honking
+chicken clucking
+turkey strutting
+rooster crowing
+sheep grazing
+goat climbing
+donkey braying
+cow mooing
+horse galloping
+pig oinking
+camel walking in desert
+llama with long neck
+alpaca with soft wool
+bison grazing
+buffalo with horns
+moose with antlers
+deer with antlers
+elk with antlers
+caribou migrating
+mouse scurrying
+rat running
+hamster eating
+gerbil playing
+guinea pig squeaking
+ferret playing
+chinchilla with soft fur
+hedgehog with spines
+porcupine with quills
+armadillo rolling into ball
+anteater eating ants
+aardvark digging
+platypus swimming
+echidna with spines
+kangaroo with joey
+wallaby hopping
+wombat burrowing
+quokka smiling
+quoll hunting
+tasmanian devil eating
+numbat eating termites
+koala clinging to tree
+sloth hanging upside down
+anteater with long tongue
+armadillo with armor
+hedgehog curled up
+porcupine climbing
+opossum playing dead
+skunk with white stripe
+weasel hunting
+mink swimming
+ferret exploring
+otter holding hands
+beaver with dam
+muskrat building lodge
+coyote howling
+jackal hunting
+dingo running
+hyena laughing
+wolf pack hunting
+fox with bushy tail
+raccoon with mask
+badger with stripes
+otter sliding
+sea otter using tools
+walrus sleeping on ice
+seal playing in water
+sea lion barking
+manatee swimming
+dugong grazing
+narwhal with tusk
+beluga whale singing
+orca hunting
+blue whale swimming
+humpback whale breaching
+fin whale swimming
+sperm whale diving
+bottlenose dolphin jumping
+killer whale hunting
+porpoise swimming
+sea turtle migrating
+leatherback turtle laying eggs
+green turtle eating seaweed
+loggerhead turtle swimming
+hawksbill turtle swimming
+alligator with sharp teeth
+crocodile with long snout
+caiman swimming
+gharial with narrow snout
+komodo dragon hunting
+iguana climbing
+chameleon changing color
+gecko climbing wall
+skink with smooth skin
+monitor lizard hunting
+snake shedding skin
+cobra with hood
+tiger snake venomous
+python constricting
+anaconda swimming
+viper with fangs
+rattlesnake rattling
+boa constrictor coiled
+sea snake swimming
+frog with long legs
+toad with warts
+salamander crawling
+newt swimming
+axolotl with gills
+mudpuppy breathing with gills
+dragonfly flying
+butterfly with colorful wings
+moth with dull wings
+bee pollinating flowers
+wasp building nest
+hornet stinging
+ant carrying food
+termite building mound
+beetle crawling
+firefly glowing
+ladybug eating aphids
+grasshopper jumping
+cricket chirping
+locust swarming
+katydid singing
+praying mantis hunting
+stick insect camouflaged
+leaf insect looking like leaf
+spider web
+black widow spider
+brown recluse spider
+tarantula crawling
+scorpion with stinger
+centipede with many legs
+millipede crawling
+earthworm burrowing
+leech sucking blood
+slug crawling
+snail with shell
+clam with shell
+oyster with pearl
+mussel attached to rock
+scallop swimming
+crab with claws
+lobster with large claws
+shrimp swimming
+prawn crawling
+crayfish in creek
+krill swimming
+sea urchin with spines
+sea cucumber on ocean floor
+starfish regenerating
+sea anemone with tentacles
+jellyfish stinging
+coral reef
+sea sponge filtering water
+sea squirt attached to rock
+ascidian on ocean floor
+sea slug with bright colors
+nudibranch crawling
+flatworm flat
+tapeworm in host
+roundworm crawling
+hookworm in soil
+heartworm in dog
+mosquito biting
+fly buzzing
+gnat swarming
+midge flying
+black fly biting
+horse fly biting
+tick feeding
+flea jumping
+louse on hair
+bed bug biting
+roach scurrying
+silverfish crawling
+earwig with pincers
+termite swarm
+ant hill
+bee hive
+wasp nest
+hornet nest
+spider web
+mosquito breeding in water
+fly laying eggs
+butterfly caterpillar
+moth caterpillar
+bee larva in hive
+wasp larva in nest
+ant larva in hill
+termite nymph
+grasshopper nymph
+dragonfly nymph in water
+mayfly nymph in water
+stonefly nymph in water
+caddisfly larva in case
+mosquito larva in water
+fly larva (maggot)
+beetle larva (grub)
+beetle pupa
+butterfly chrysalis
+moth cocoon
+bee pupa
+wasp pupa
+ant pupa
+termite pupa
+bird building nest
+bird laying eggs
+bird feeding chicks
+bird singing
+bird migrating
+bird flying
+bird perching
+bird bathing
+bird drinking
+bird preening
+bird hunting
+bird eating seeds
+bird eating insects
+bird eating fish
+bird eating berries
+bird eating worms
+bird eating small animals
+bird nesting in tree
+bird nesting in bush
+bird nesting in grass
+bird nesting on ground
+bird nesting in cavity
+bird nesting in cliff
+bird nesting in burrow
+bird nesting in nest box
+bird nesting in colony
+bird nesting in rookery
+bird nesting in heronry
+bird nesting in gullery
+bird nesting in ternery
+bird nesting in penguin colony
+bird nesting in albatross colony
+bird nesting in petrel colony
+bird nesting in shearwater colony
+bird nesting in puffin colony
+bird nesting in auks colony
+bird nesting in gannet colony
+bird nesting in cormorant colony
+bird nesting in pelican colony
+bird nesting in flamingo colony
+bird nesting in stork colony
+bird nesting in ibis colony
+bird nesting in spoonbill colony
+bird nesting in heron colony
+bird nesting in egret colony
+bird nesting in crane colony
+bird nesting in rail colony
+bird nesting in coot colony
+bird nesting in moorhen colony
+bird nesting in gallinule colony
+bird nesting in jacana colony
+bird nesting in plover colony
+bird nesting in sandpiper colony
+bird nesting in snipe colony
+bird nesting in woodcock colony
+bird nesting in curlew colony
+bird nesting in godwit colony
+bird nesting in whimbrel colony
+bird nesting in turnstone colony
+bird nesting in redshank colony
+bird nesting in greenshank colony
+bird nesting in sandpiper colony
+bird nesting in phalarope colony
+bird nesting in avocet colony
+bird nesting in stilt colony
+bird nesting in lapwing colony
+bird nesting in gull colony
+bird nesting in tern colony
+bird nesting in skua colony
+bird nesting in jaeger colony
+bird nesting in albatross colony
+bird nesting in petrel colony
+bird nesting in shearwater colony
+bird nesting in storm petrel colony
+bird nesting in diving petrel colony
+bird nesting in penguin colony
+bird nesting in auks colony
+bird nesting in puffin colony
+bird nesting in guillemot colony
+bird nesting in murre colony
+bird nesting in razorbill colony
+bird nesting in puffin colony
+bird nesting in auklet colony
+bird nesting in murrelet colony
+bird nesting in puffin colony
+bird nesting in gannet colony
+bird nesting in booby colony
+bird nesting in cormorant colony
+bird nesting in shag colony
+bird nesting in pelican colony
+bird nesting in frigatebird colony
+bird nesting in tropicbird colony
+bird nesting in tern colony
+bird nesting in skimmer colony
+bird nesting in gull colony
+bird nesting in skua colony
+bird nesting in jaeger colony
+bird nesting in albatross colony
+bird nesting in petrel colony
+bird nesting in shearwater colony
+bird nesting in storm petrel colony
+bird nesting in diving petrel colony
+bird nesting in penguin colony
+bird nesting in auks colony
+bird nesting in puffin colony
+bird nesting in guillemot colony
+bird nesting in murre colony
+bird nesting in razorbill colony
+bird nesting in puffin colony
+bird nesting in auklet colony
+bird nesting in murrelet colony
+bird nesting in puffin colony
+bird nesting in gannet colony
+bird nesting in booby colony
+bird nesting in cormorant colony
+bird nesting in shag colony
+bird nesting in pelican colony
+bird nesting in frigatebird colony
+bird nesting in tropicbird colony
+# 食物
+fresh fruits
+baked bread
+chocolate cake
+pizza with toppings
+sushi platter
+ice cream cone
+coffee and pastry
+tea and cookies
+roasted chicken
+salad bowl
+pasta dish
+soup in bowl
+grilled steak
+fried rice
+vegetable stir fry
+# 运动
+football match
+basketball game
+soccer practice
+running marathon
+swimming race
+tennis match
+cycling race
+skiing downhill
+skateboarding
+rock climbing
+dancing competition
+yoga practice
+boxing match
+martial arts training
+golf game
+# 科技概念
+artificial intelligence
+virtual reality
+robotics
+space exploration
+renewable energy
+quantum computing
+internet of things
+biotechnology
+nanotechnology
+blockchain technology
+smart city
+autonomous vehicles
+5G technology
+cloud computing
+genetic engineering
+# 情感状态
+happy and joyful
+sad and melancholic
+angry and frustrated
+calm and peaceful
+excited and energetic
+anxious and worried
+loving and caring
+confident and strong
+curious and inquisitive
+surprised and amazed
+tired and exhausted
+bored and indifferent
+grateful and thankful
+hopeful and optimistic
+fearful and scared
+# 节日庆典
+christmas celebration
+new year fireworks
+halloween party
+thanksgiving dinner
+birthday celebration
+wedding ceremony
+festival with lanterns
+carnival parade
+music festival
+cultural celebration
+religious festival
+harvest festival
+winter holiday
+spring festival
+summer festival
+# 概念组合
+cherry blossom tree in ancient castle
+wise old man with beard in cubist style
+futuristic flying car over volcanic eruption
+rose garden in impressionist landscape
+sunflower field with rainbow after rain
+ancient greek temple in surrealist dreamscape
+samurai warrior in anime character design
+steam locomotive through redwood forest
+glowing crystal ball in dark cave
+playful child with balloon in park
+modern glass house by glacial lake
+butterfly orchid in watercolor painting
+tropical beach resort at sunset
+astronaut in space with space shuttle
+chef in kitchen with modern equipment
+vintage typewriter on wooden desk
+waterfall in rainforest with rainbow
+rock musician performing on stage
+underwater research facility near coral reef
+medieval village in snowfall
+parrot in a cage in victorian mansion
+gothic cathedral at night
+lotus flower pond in zen garden
+racing sports car on mountain road
+holographic display in futuristic room
+treasure chest with gold in pirate cave
+redwood forest with foggy morning
+ancient egyptian artifact in museum
+fairy tale princess in castle
+magnolia tree in spring
+delivery drone swarm in city sky
+peacock feather in jewelry box
+steampunk airship port with airships
+cactus desert with sandstorm
+minimalist design house
+japanese zen garden with stone lanterns
+impressionist landscape with water lilies
+comic book style superhero
+wooden barn in countryside
+space elevator in futuristic city
+baroque sculpture of angel
+beach at sunrise with palm trees
+# 更多概念组合
+lavender field in summer
+volcanic eruption with lightning
+wise old man reading antique book
+young businesswoman with coffee cup
+elegant ballerina in tutu
+firefighter saving child
+nurse with stethoscope
+doctor in white coat
+teacher with books
+student with laptop
+artist painting on canvas
+musician playing guitar
+dancer in costume
+athlete with trophy
+police officer directing traffic
+chef decorating cake
+gardener with flowers
+writer with pen
+photographer with camera
+soccer player scoring goal
+classic vintage car on country road
+futuristic flying car in cloudy sky
+steam locomotive in mountains
+off-road jeep in mud
+submarine exploring ocean
+helicopter over city
+cruise ship in blue ocean
+bicycle in park
+# 环境与氛围组合
+cozy cabin in snowy winter
+bright classroom with sunlight
+spooky forest at night
+busy city street
+tranquil lake at dawn
+colorful market in town
+silent library with books
+exciting concert venue
+peaceful garden with fountain
+noisy construction site
+serene mountain temple
+crowded shopping mall
+romantic restaurant with candles
+adventurous hiking trail
+mysterious ancient ruins
+# 物体与风格组合
+wooden sculpture in modern art gallery
+glass vase in minimalist home
+metal robot in steampunk style
+leather journal with vintage design
+coffee cup in cozy café
+treasure chest in pirate movie style
+magical potion bottle in fantasy world
+clock tower in gothic architecture
+puzzle piece in colorful design
+musical instrument in baroque style
+painting brush in artist studio
+scissors and paper in craft room
+antique book in library
+vintage camera in photography studio
+gold jewelry in luxury store
+# 场景与情感组合
+beach at sunset with romantic couple
+mountain top with victorious climber
+forest path with lost traveler
+city park with happy family
+rainy day with sad person
+sunny meadow with playful dog
+stormy night with scared child
+peaceful lake with meditating person
+exciting amusement park
+quiet museum with curious visitor
+# 时间与地点组合
+ancient rome at dusk
+future city at night
+victorian london in fog
+medieval village at market day
+wild west town at high noon
+space station in orbit
+underwater city
+post-apocalyptic world
+utopian society
+dystopian future
+
+# 立体字符种类
+basic 3D blocks
+sloped 3D shapes
+light and shadow 3D
+triangular pyramids
+rectangular prisms
+cylindrical forms
+spherical approximations
+3D cubes with perspective
+3D stairs and steps
+3D arches and domes
+3D columns and pillars
+3D cubes with depth
+3D boxes with shading
+3D spheres with ASCII
+3D pyramids with edges
+3D cones with lines
+3D cylinders with patterns
+3D torus approximations
+3D diamond shapes
+3D star patterns
+3D cross shapes
+3D hexagons and polygons
+3D cubes with corners
+3D blocks with borders
+3D structures with layers
+3D cubes with highlights
+3D shapes with gradients
+3D forms with texture
+3D characters with depth
+3D symbols with perspective
+3D patterns with depth
+3D cubes with faces
+3D shapes with volume
+3D structures with depth
+3D cubes with edges
+3D boxes with corners
+3D spheres with shading
+3D pyramids with faces
+3D cones with shading
+3D cylinders with shading
+3D torus with shading
+3D diamond with shading
+3D star with shading
+3D cross with shading
+3D hexagons with depth
+3D cubes with perspective
+3D blocks with depth
+3D structures with volume
+3D cubes with highlights
+3D shapes with edges
+3D forms with depth
+3D characters with perspective
+3D symbols with depth
+3D patterns with volume
+3D cubes with texture
+3D shapes with texture
+3D structures with texture
+3D cubes with shading
+3D boxes with shading
+3D spheres with texture
+3D pyramids with texture
+3D cones with texture
+3D cylinders with texture
+3D torus with texture
+3D diamond with texture
+3D star with texture
+3D cross with texture
+3D hexagons with texture
