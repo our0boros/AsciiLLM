@@ -4,6 +4,7 @@ import os, json, math, itertools, argparse, logging, tempfile
 from pathlib import Path
 from PIL import Image
 import numpy as np
+from peft import PeftModel
 
 import pandas as pd
 import torch, tqdm
@@ -11,7 +12,13 @@ from diffusers import StableDiffusionPipeline
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
 # 导入本地converter模块
-from .converter import img_to_ascii as converter_img_to_ascii
+import sys
+import os
+
+# 添加当前目录到Python路径，以便在直接运行脚本时也能找到模块
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+from converter import img_to_ascii as converter_img_to_ascii
 
 # 配置日志
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -25,7 +32,8 @@ def parse_args():
     parser.add_argument('--output-dir', type=str, default='data/ascii_art_dataset', help='输出目录')
     parser.add_argument('--device', type=str, default=None, help='使用的设备(cuda/cpu)')
     parser.add_argument('--llm-name', type=str, default='models/Qwen3-1.7B', help='LLM模型名称或路径')
-    parser.add_argument('--sd-model', type=str, default='models/stable-diffusion-v1-5', help='Stable Diffusion模型名称或路径')
+    parser.add_argument('--sd-model-base', type=str, default='models/stable-diffusion-v1-5', help='Stable Diffusion模型名称或路径')
+    parser.add_argument('--sd-model-lora', type=str, default=None, help='Stable Diffusion LoRA模型名称或路径') # models/illustration_flat/插画风格lora模型扁平插画_V2.0.safetensors
     parser.add_argument('--inference-steps', type=int, default=25, help='扩散模型推理步数')
     return parser.parse_args()
 
@@ -43,11 +51,41 @@ def load_models(args):
     ).to(device)
     
     # 1.2 SD for image
-    logger.info(f'加载Stable Diffusion模型: {args.sd_model}')
+    logger.info(f'加载Stable Diffusion基础模型: {args.sd_model_base}')
     sd_pipe = StableDiffusionPipeline.from_pretrained(
-        args.sd_model,
+        args.sd_model_base,
         torch_dtype=torch.float16 if device=='cuda' else torch.float32
     ).to(device)
+    
+    # 1.3 加载LoRA模型（如果提供）
+    if args.sd_model_lora and args.sd_model_lora != 'None':
+        lora_path = Path(args.sd_model_lora)
+        logger.info(f'加载Stable Diffusion LoRA模型: {lora_path}')
+        
+        # 检查是否为单个.safetensors文件
+        if lora_path.is_file() and lora_path.suffix == '.safetensors':
+            # 直接加载单个.safetensors文件
+            logger.info(f'直接加载.safetensors文件: {lora_path}')
+            sd_pipe.load_lora_weights(
+                lora_path.parent,  # 模型目录
+                weight_name=lora_path.name,  # 权重文件名
+                torch_dtype=torch.float16 if device=='cuda' else torch.float32
+            )
+        else:
+            # 尝试使用PEFT方式加载（需要adapter_config.json）
+            try:
+                logger.info(f'尝试使用PEFT方式加载LoRA模型')
+                sd_pipe.unet = PeftModel.from_pretrained(
+                    sd_pipe.unet,
+                    args.sd_model_lora,
+                    torch_dtype=torch.float16 if device=='cuda' else torch.float32
+                )
+            except Exception as e:
+                logger.warning(f'PEFT加载失败，尝试作为普通LoRA加载: {e}')
+                sd_pipe.load_lora_weights(
+                    args.sd_model_lora,
+                    torch_dtype=torch.float16 if device=='cuda' else torch.float32
+                )
     
     return device, tok, llm, sd_pipe
 
@@ -141,11 +179,10 @@ def main():
     OUT_DIR = Path(args.output_dir)
     OUT_DIR.mkdir(exist_ok=True)
     (OUT_DIR / 'orig').mkdir(exist_ok=True)
-    (OUT_DIR / 'ascii').mkdir(exist_ok=True)
     
     # 定义字符画参数
     LONG_EDGE_CHARS = [8, 16, 32, 64, 128]
-    COLOR_OPTIONS = [False, True]  # 黑白/彩色
+    COLOR_OPTIONS = [False, ]  # 黑白/彩色
     MODES = ['normal', 'complex', 'braille']  # 三种模式
     
     # 检查是否可以增量保存
@@ -207,19 +244,13 @@ def main():
                             h_char = len(lines)
                             w_char = max(len(line) for line in lines)
                             
-                            # 生成文件名
-                            color_str = 'color' if color else 'bw'
-                            ascii_name = f'{count_img:06d}_{color_str}_{mode}_{long}.txt'
-                            ascii_path = OUT_DIR / 'ascii' / ascii_name
-                            ascii_path.write_text(ascii_art, encoding='utf8')
-                            
-                            # 添加到元数据列表
+                            # 添加到元数据列表（直接存储ASCII文本，不保存到单独文件）
                             meta_list.append({
                                 'prompt': prompt,
                                 'orig_img': str(orig_path.relative_to(OUT_DIR)),
                                 'w_char': w_char,
                                 'h_char': h_char,
-                                'ascii_path': str(ascii_path.relative_to(OUT_DIR)),
+                                'ascii_text': ascii_art,  # 直接存储ASCII文本内容
                                 'color': color,
                                 'mode': mode,
                                 'long_edge': long,
@@ -242,19 +273,24 @@ def main():
             combined_meta = new_meta
         
         # 保存为parquet格式
-        try:
-            combined_meta.to_parquet(meta_file, index=False)
-            logger.info(f'元数据已保存: {meta_file}')
-            logger.info(f'新增 {len(new_meta)} 条记录，总记录数: {len(combined_meta)}')
-        except Exception as e:
-            logger.error(f'保存元数据失败: {e}')
-            # 保存为CSV作为备用
-            csv_file = OUT_DIR / 'meta_backup.csv'
-            combined_meta.to_csv(csv_file, index=False, encoding='utf-8')
-            logger.info(f'已保存备用CSV格式元数据: {csv_file}')
-    
+        combined_meta.to_parquet(meta_file, index=False)
+        logger.info(f'元数据已保存: {meta_file}')
+        logger.info(f'新增 {len(new_meta)} 条记录，总记录数: {len(combined_meta)}')
+
     logger.info(f'数据生成完成！共生成 {len(meta_list)} 个ASCII字符画')
     logger.info(f'元数据保存在: {meta_file}')
+    
+    # 随机采样一个样本显示
+    if meta_list:
+        import random
+        random_sample = random.choice(meta_list)
+        logger.info(f'\n--- 随机采样样本 ---')
+        logger.info(f'提示词: {random_sample["prompt"]}')
+        logger.info(f'图像: {random_sample["orig_img"]}')
+        logger.info(f'字符画设置: 宽={random_sample["w_char"]} 高={random_sample["h_char"]} 颜色={random_sample["color"]} 模式={random_sample["mode"]}')
+        logger.info(f'\nASCII字符画示例:')
+        logger.info(random_sample["ascii_text"])
+        logger.info('--- 样本显示结束 ---')
 
 if __name__ == '__main__':
     main()
