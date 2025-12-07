@@ -5,6 +5,7 @@ from pathlib import Path
 from PIL import Image
 import numpy as np
 from peft import PeftModel
+import concurrent.futures
 
 import pandas as pd
 import torch, tqdm
@@ -23,7 +24,7 @@ import os
 # 添加当前目录到Python路径，以便在直接运行脚本时也能找到模块
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from converter import generate_ascii_from_pil as converter_generate_ascii
+from converter import img_to_ascii as converter_generate_ascii
 
 # 配置日志
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -228,11 +229,11 @@ def generate_prompts(tok, llm, n_prompts=20, device='cuda', yield_one_by_one=Fal
         return prompts[:n_prompts]
 
 # ========== 4. 图像→字符画 ==========
-def generate_ascii_from_converter(img: Image.Image, long_edge: int, color: bool, mode: str) -> str:
+def generate_ascii_from_converter(img_path: Path, long_edge: int, color: int, mode: str) -> str:
     """使用外部converter工具生成ASCII字符画"""
     # 直接使用converter模块的函数处理PIL图像，避免创建临时文件
     return converter_generate_ascii(
-        img,
+        img_path,
         width_chars=long_edge,
         color=color,
         mode=mode
@@ -250,7 +251,7 @@ def main():
     
     # 定义字符画参数
     LONG_EDGE_CHARS = [-1, 16, 32, 64, 96]
-    COLOR_OPTIONS = [False, ]  # 黑白/彩色
+    COLOR_OPTIONS = [0, 1, 2]  # 黑白/灰/彩色
     MODES = ['normal', 'complex', 'braille']  # 三种模式
     
     # 检查是否可以增量保存
@@ -306,39 +307,56 @@ def main():
             img.save(orig_path, format='JPEG', quality=90)
             logger.debug(f'保存原图: {orig_path}')
             
-            # 遍历所有字符画参数组合（颜色/黑白 * 3种模式 * 5种字符长度 = 15种组合）
+            # 创建一个处理参数组合的函数
+            def process_combination(params):
+                color, mode, long, idx = params
+                try:
+                    # 使用converter.py生成ASCII字符画
+                    ascii_art = generate_ascii_from_converter(orig_path, long, color, mode)
+                    if len(ascii_art) < long * long * 0.5:
+                        logger.error(f'生成的ASCII字符画为空 (color={color}, mode={mode}, long={long})')
+                        logger.error(f'生成的ASCII字符画: {ascii_art}')
+                        return None
+                    # 计算字符宽高
+                    lines = ascii_art.splitlines()
+                    h_char = len(lines)
+                    w_char = max(len(line) for line in lines)
+                    color_str = 'rgb' if color == 1 else 'gray' if color == 2 else 'char'
+                    # 返回处理结果
+                    return {
+                        'prompt': prompt,
+                        'orig_img': str(orig_path.relative_to(OUT_DIR)),
+                        'w_char': w_char,
+                        'h_char': h_char,
+                        'ascii_text': ascii_art,
+                        'color': color_str,
+                        'mode': mode,
+                        'long_edge': long,
+                        'timestamp': pd.Timestamp.now()
+                    }
+                except Exception as e:
+                    logger.error(f'生成ASCII字符画失败 (color={color_str}, mode={mode}, long={long}): {e}')
+                    return None
+            
+            # 准备所有参数组合
+            combinations = []
             for color in COLOR_OPTIONS:
                 for mode in MODES:
                     for long in LONG_EDGE_CHARS:
+                        combinations.append((color, mode, long, combination_count))
                         combination_count += 1
-                        logger.info(f'处理图像 {count_img:06d}/{len(prompt)*args.n_images}, 组合 {combination_count}/{total_combinations} (颜色: {"彩色" if color else "黑白"}, 模式: {mode}, 长边字符数: {long})')
-                        try:
-                            # 使用converter.py生成ASCII字符画
-                            ascii_art = generate_ascii_from_converter(img, long, color, mode)
-                            if len(ascii_art) < long * long * 0.5:
-                                logger.error(f'生成的ASCII字符画为空 (color={color}, mode={mode}, long={long})')
-                                logger.error(f'生成的ASCII字符画: {ascii_art}')
-                                continue
-                            # 计算字符宽高
-                            lines = ascii_art.splitlines()
-                            h_char = len(lines)
-                            w_char = max(len(line) for line in lines)
-                            
-                            # 添加到元数据列表（直接存储ASCII文本，不保存到单独文件）
-                            meta_list.append({
-                                'prompt': prompt,
-                                'orig_img': str(orig_path.relative_to(OUT_DIR)),
-                                'w_char': w_char,
-                                'h_char': h_char,
-                                'ascii_text': ascii_art,  # 直接存储ASCII文本内容
-                                'color': color,
-                                'mode': mode,
-                                'long_edge': long,
-                                'timestamp': pd.Timestamp.now()
-                            })
-                            
-                        except Exception as e:
-                            logger.error(f'生成ASCII字符画失败 (color={color}, mode={mode}, long={long}): {e}')
+            
+            # 使用线程池并行处理所有参数组合
+            logger.info(f'并行处理 {count_img:06d}/{len(prompt)*args.n_images} 的 {len(combinations)} 个参数组合')
+            with concurrent.futures.ThreadPoolExecutor(max_workers=os.cpu_count() * 2) as executor:
+                # 提交所有任务
+                future_to_param = {executor.submit(process_combination, params): params for params in combinations}
+                
+                # 收集结果
+                for future in concurrent.futures.as_completed(future_to_param):
+                    result = future.result()
+                    if result is not None:
+                        meta_list.append(result)
             
             # 优化：定期保存元数据，避免内存占用过大
             if count_img % 50 == 0 and meta_list:

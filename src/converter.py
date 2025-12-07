@@ -49,7 +49,7 @@ def cache_ascii(maxsize=100):
 def img_to_ascii(
     img_path: Path,
     width_chars: int = 64,
-    color: bool = False,
+    color: int = 0,
     mode: str = "normal", # "normal" | "complex" | "braille"
 ) -> str:
     """
@@ -58,32 +58,20 @@ def img_to_ascii(
     color       : -C  彩色
     mode        : -c  复杂字符 | -b  点阵⣿模式（优先）
     """
-    if not check_exe_exists(EXE):
-        raise RuntimeError(f"ASCII转换工具不存在: {EXE}")
-    
-    if not img_path.exists(): 
-        raise FileNotFoundError(img_path)
-    
+    if not check_exe_exists(EXE): raise RuntimeError(f"ASCII转换工具不存在: {EXE}")
+    if not img_path.exists(): raise FileNotFoundError(img_path)
     # 构建命令
     cmd = [str(EXE)]
-    
     # 优化参数顺序
     cmd.extend([str(img_path)])
-    if width_chars > 0:
-        cmd.extend(["-W", str(width_chars)])
-    
+    if width_chars > 0: cmd.extend(["-W", str(width_chars)])
     # 添加模式参数
-    if mode == "braille":
-        cmd.append("-b")
-    elif mode == "complex":
-        cmd.append("-c")
-    elif mode != "normal":
-        raise ValueError(f"invalid mode: {mode}")
-    
+    if mode == "braille": cmd.append("-b")
+    elif mode == "complex": cmd.append("-c")
+    elif mode != "normal": raise ValueError(f"invalid mode: {mode}")
     # 添加颜色参数
-    if color:
-        cmd.append("-C")
-    
+    if color == 1: cmd.append("-C")
+    if color == 2: cmd.append("-g")
     # 优化subprocess调用
     completed = subprocess.run(
         cmd, 
@@ -93,13 +81,10 @@ def img_to_ascii(
         errors='replace',
         creationflags=subprocess.CREATE_NO_WINDOW  # 在Windows上隐藏控制台窗口
     )
-    
-    if completed.returncode != 0:
-        raise RuntimeError(f"converter failed: {completed.stderr}")
-    
+    if completed.returncode != 0: raise RuntimeError(f"converter failed: {completed.stderr}")
     return str(completed.stdout)
 
-def generate_ascii_from_pil(img, width_chars: int = 64, color: bool = False, mode: str = "normal") -> str:
+def generate_ascii_from_pil(img, width_chars: int = 64, color: int = 0, mode: str = "normal") -> str:
     """
     从PIL图像对象生成ASCII字符画（通过临时文件）
     """
