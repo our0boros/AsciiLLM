@@ -1,19 +1,24 @@
-from diffusers import StableDiffusionPipeline
+# peft_lora.py
 import torch
-import ascii_magic
+from pathlib import Path
+from diffusers import StableDiffusionPipeline
 
-# 检查CUDA是否可用
 device = "cuda" if torch.cuda.is_available() else "cpu"
-print(f"使用设备: {device}")
+dtype  = torch.float16 if device=="cuda" else torch.float32
 
-model_id = "sd-legacy/stable-diffusion-v1-5"
-# 如果使用CPU，将dtype改为float32，因为float16在CPU上可能不支持
-pipe = StableDiffusionPipeline.from_pretrained(model_id, torch_dtype=torch.float16 if device == "cuda" else torch.float32)
-pipe = pipe.to(device)
+# ① 本地基础模型
+model_id = r"models/dreamlike-diffusion-1.0"
+pipe = StableDiffusionPipeline.from_pretrained(model_id, torch_dtype=dtype).to(device)
 
-prompt = "a photo of an astronaut riding a horse on mars"
-image = pipe(prompt).images[0]  
+# ② 挂 LoRA（PEFT 方式，支持多适配器）
+lora_path = Path("models/插画风格lora模型扁平插画_V2.0.safetensors") 
+# 插画风格lora模型扁平插画_V2.0.safetensors simple_linear_sd1.5/简易线条小插图_v1.0.safetensors
+pipe.load_lora_weights(lora_path, adapter_name="illustration")   # 名字随意
 
-ascii_art = ascii_magic.from_pillow_image(image)
-print(ascii_art.to_ascii(columns=64, enhance_image=True))
-# image.save("astronaut_rides_horse.png")
+# ③ 触发词 + 权重
+prompt = "illustration style, 1girl, upper body" # "flat illustration style, 1girl, upper body"
+# 1girl riding a scooter, Black Long Hair, simple lineart, bold illustration, cute style
+for w in [0.7]:
+    pipe.set_adapters(["illustration"], adapter_weights=[w])
+    img = pipe(prompt, num_inference_steps=20).images[0]
+    img.save(f"data/weight_{w}.png")

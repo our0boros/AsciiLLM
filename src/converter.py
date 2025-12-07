@@ -97,7 +97,7 @@ def img_to_ascii(
     if completed.returncode != 0:
         raise RuntimeError(f"converter failed: {completed.stderr}")
     
-    return completed.stdout.strip()
+    return str(completed.stdout)
 
 def generate_ascii_from_pil(img, width_chars: int = 64, color: bool = False, mode: str = "normal") -> str:
     """
