@@ -8,8 +8,8 @@ from peft import PeftModel
 
 import pandas as pd
 import torch, tqdm
-from diffusers import StableDiffusionPipeline
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from diffusers import StableDiffusionPipeline, DiffusionPipeline, QuantoConfig, PipelineQuantizationConfig
+from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 
 # 启用CUDA内存自动分配
 if torch.cuda.is_available():
@@ -32,13 +32,13 @@ logger = logging.getLogger(__name__)
 # ========== 0. 参数配置 ==========
 def parse_args():
     parser = argparse.ArgumentParser(description='批量生成ASCII字符画数据集')
-    parser.add_argument('--n-prompts', type=int, default=1, help='生成的提示词总数')
+    parser.add_argument('--n-prompts', type=int, default=200_000, help='生成的提示词总数')
     parser.add_argument('--n-images', type=int, default=4, help='每个提示词生成的图像数量')
     parser.add_argument('--output-dir', type=str, default='data/ascii_art_dataset', help='输出目录')
     parser.add_argument('--device', type=str, default=None, help='使用的设备(cuda/cpu)')
     parser.add_argument('--llm-name', type=str, default='models/Qwen3-1.7B', help='LLM模型名称或路径')
     parser.add_argument('--sd-model-base', type=str, default=r"models/dreamlike-diffusion-1.0", help='Stable Diffusion模型名称或路径')
-    parser.add_argument('--sd-model-lora', type=str, default="models/插画风格lora模型扁平插画_V2.0.safetensors", help='Stable Diffusion LoRA模型名称或路径') # models/illustration_flat/插画风格lora模型扁平插画_V2.0.safetensors
+    parser.add_argument('--sd-model-lora', type=str, default="models/插画风格lora模型扁平插画_V2.0.safetensors", help='Stable Diffusion LoRA模型名称或路径')
     parser.add_argument('--inference-steps', type=int, default=25, help='扩散模型推理步数')
     parser.add_argument('--llm-int4', action='store_true', default=True, help='是否对LLM模型启用int4量化')
     parser.add_argument('--sd-int4', action='store_true', default=True, help='是否对Stable Diffusion模型启用int4量化')
@@ -50,7 +50,7 @@ def load_models(args):
     device = args.device or ('cuda' if torch.cuda.is_available() else 'cpu')
     logger.info(f'使用设备: {device}')
     
-    # 1.1 LLM for prompt
+    # 1.1 LLM for prompt（原逻辑保留，LLM的BitsAndBytesConfig是生效的）
     logger.info(f'加载LLM模型: {args.llm_name}')
     tok = AutoTokenizer.from_pretrained(args.llm_name, padding_side='left')
     
@@ -63,14 +63,12 @@ def load_models(args):
     if args.llm_int4:
         logger.info("启用LLM模型int4量化")
         try:
-            from transformers import BitsAndBytesConfig
-            
-            # 配置int4量化
+            # LLM使用Transformers的BitsAndBytesConfig是正确的
             bnb_config = BitsAndBytesConfig(
-                load_in_4bit=True,  # 启用4位量化
-                bnb_4bit_quant_type="nf4",  # 使用NF4类型量化（最适合LLM）
-                bnb_4bit_compute_dtype=torch.float16,  # 计算时使用的 dtype
-                bnb_4bit_use_double_quant=True,  # 启用双量化
+                load_in_4bit=True,
+                bnb_4bit_quant_type="nf4",
+                bnb_4bit_compute_dtype=torch.float16,
+                bnb_4bit_use_double_quant=True,
             )
             llm_kwargs["quantization_config"] = bnb_config
         except ImportError:
@@ -85,7 +83,7 @@ def load_models(args):
     if not args.llm_int4:
         llm = llm.to(device)
     
-    # 启用LLM模型编译（使用triton优化）
+    # 启用LLM模型编译
     if device == 'cuda' and hasattr(torch, 'compile'):
         try:
             logger.info("启用LLM模型编译优化")
@@ -93,72 +91,48 @@ def load_models(args):
         except Exception as e:
             logger.warning(f"无法启用LLM模型编译: {e}")
     
-    # 1.2 SD for image
+    # 1.2 SD for image（修复int4量化逻辑）
     logger.info(f'加载Stable Diffusion基础模型: {args.sd_model_base}')
     
-    # SD模型优化配置
+    # SD模型基础配置
     sd_kwargs = {
-        "torch_dtype": torch.float16 if device=='cuda' else torch.float32,
-        "use_safetensors": True  # 使用safetensors加速模型加载
+        "torch_dtype": torch.float16 if device == "cuda" else torch.float32,
+        "use_safetensors": True,
+        "device_map": "cuda" if device == "cuda" else "balanced",  # 自动分配设备
     }
-    
-    # 如果启用SD模型int4量化
+
+    # ========== 修复SD量化核心代码 ==========
     if args.sd_int4:
-        logger.info("启用Stable Diffusion模型int4量化")
-        try:
-            from transformers import BitsAndBytesConfig
-            
-            # 配置SD模型的int4量化
-            bnb_config = BitsAndBytesConfig(
-                load_in_4bit=True,  # 启用4位量化
-                bnb_4bit_quant_type="nf4",  # 使用NF4类型量化
-                bnb_4bit_compute_dtype=torch.float16,  # 计算时使用的 dtype
-                bnb_4bit_use_double_quant=True,  # 启用双量化
-            )
-            sd_kwargs["quantization_config"] = bnb_config
-        except ImportError:
-            logger.error("无法导入BitsAndBytesConfig，请安装bitsandbytes库: pip install bitsandbytes")
-            logger.info("将继续使用未量化的SD模型")
-        except Exception as e:
-            logger.error(f"为SD模型配置int4量化时出错: {e}")
-            logger.info("将继续使用未量化的SD模型")
+        logger.info("启用Stable Diffusion模型int4量化（Diffusers官方方案）")
+        pipeline_quant_config = PipelineQuantizationConfig(
+            quant_backend="bitsandbytes_4bit",
+            quant_kwargs={"load_in_4bit": True, "bnb_4bit_quant_type": "nf4", "bnb_4bit_compute_dtype": torch.bfloat16},
+            components_to_quantize=["transformer", "text_encoder_2"],
+        )
+        sd_kwargs["quantization_config"] = pipeline_quant_config
+        sd_pipe = StableDiffusionPipeline.from_pretrained(args.sd_model_base, **sd_kwargs)
+    else:
+        # 不量化时的基础加载
+        sd_pipe = StableDiffusionPipeline.from_pretrained(args.sd_model_base, **sd_kwargs)
+    # ========== SD量化修复结束 ==========
     
-    # 尝试启用xformers加速
+    # 启用xformers加速（原逻辑保留）
     try:
         import xformers
-        sd_kwargs["use_xformers_memory_efficient_attention"] = True
+        sd_pipe.enable_xformers_memory_efficient_attention()
         logger.info("成功启用xformers优化")
     except ImportError:
         logger.warning("xformers未安装，无法使用内存高效注意力")
-    
-    sd_pipe = StableDiffusionPipeline.from_pretrained(
-        args.sd_model_base,
-        **sd_kwargs
-    )
-    
-    # 量化模型已经自动移动到GPU，无需再次调用.to(device)
-    if not args.sd_int4:
-        sd_pipe = sd_pipe.to(device)
-    
-    # 启用SD模型编译
-    if device == 'cuda' and hasattr(torch, 'compile'):
-        try:
-            logger.info("启用SD模型编译优化")
-            sd_pipe.unet = torch.compile(sd_pipe.unet, mode="reduce-overhead")
-        except Exception as e:
-            logger.warning(f"无法启用SD模型编译: {e}")
-    
-    # 1.3 加载LoRA模型（如果提供）
+
+    # 1.3 加载LoRA模型（原逻辑保留，注意量化后LoRA加载兼容性）
     if args.sd_model_lora and args.sd_model_lora != 'None':
         lora_path = Path(args.sd_model_lora)
         logger.info(f'加载Stable Diffusion LoRA模型: {lora_path}')
         
-        # 检查是否为单个.safetensors文件
         if lora_path.is_file() and lora_path.suffix == '.safetensors':
-            # 直接加载单个.safetensors文件
-            logger.info(f'直接加载.safetensors文件: {lora_path}')
-            sd_pipe.load_lora_weights(lora_path, adapter_name="illustration")   # 名字随意
+            sd_pipe.load_lora_weights(lora_path, adapter_name="illustration")
             sd_pipe.set_adapters(["illustration"], adapter_weights=[0.7])
+            logger.info("LoRA模型加载成功")
         else:
             raise ValueError(f'不支持的LoRA模型格式: {lora_path}')
     
