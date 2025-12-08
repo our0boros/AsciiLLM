@@ -6,6 +6,8 @@ from PIL import Image
 import numpy as np
 from peft import PeftModel
 import concurrent.futures
+from ascii_art_converter.generator import AsciiArtGenerator, AsciiArtConfig
+from ascii_art_converter.constants import RenderMode
 
 import pandas as pd
 import torch, tqdm
@@ -23,8 +25,6 @@ import os
 
 # 添加当前目录到Python路径，以便在直接运行脚本时也能找到模块
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
-from converter import img_to_ascii as converter_generate_ascii
 
 # 配置日志
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -229,15 +229,27 @@ def generate_prompts(tok, llm, n_prompts=20, device='cuda', yield_one_by_one=Fal
         return prompts[:n_prompts]
 
 # ========== 4. 图像→字符画 ==========
-def generate_ascii_from_converter(img_path: Path, long_edge: int, color: int, mode: str) -> str:
-    """使用外部converter工具生成ASCII字符画"""
-    # 直接使用converter模块的函数处理PIL图像，避免创建临时文件
-    return converter_generate_ascii(
-        img_path,
-        width_chars=long_edge,
-        color=color,
-        mode=mode
+def generate_ascii_from_converter(img_path: Path, long_edge: int, mode: str) -> tuple:
+    """使用ascii_art_converter库生成ASCII字符画和颜色矩阵"""
+    # 加载图像
+    image = Image.open(img_path)
+    
+    # 转换模式
+    render_mode = RenderMode.BRAILLE if mode == 'braille' else RenderMode.DENSITY
+    
+    # 创建配置
+    config = AsciiArtConfig(
+        width=long_edge if long_edge > 0 else None,  # 如果long_edge为-1，则使用None
+        mode=render_mode,
+        colorize=True,  # 默认开启彩色
     )
+    
+    # 生成ASCII艺术
+    generator = AsciiArtGenerator()
+    result = generator.convert(image, config)
+    
+    # 返回text和colors
+    return result.text, result.colors
 
 # ========== 5. 主循环 ==========
 def main():
@@ -251,7 +263,7 @@ def main():
     
     # 定义字符画参数
     LONG_EDGE_CHARS = [-1, 16, 32, 64, 96]
-    COLOR_OPTIONS = [0, 1, 2]  # 黑白/灰/彩色
+    # 移除颜色选项，所有样本默认包含颜色矩阵
     MODES = ['normal', 'complex', 'braille']  # 三种模式
     
     # 检查是否可以增量保存
@@ -299,7 +311,7 @@ def main():
                 continue
             
             # 计算总组合数和当前图像的总进度
-            total_combinations = len(COLOR_OPTIONS) * len(MODES) * len(LONG_EDGE_CHARS)
+            total_combinations = len(MODES) * len(LONG_EDGE_CHARS)
             combination_count = 0
             
             # 保存原图（使用JPEG格式以提高速度）
@@ -309,42 +321,42 @@ def main():
             
             # 创建一个处理参数组合的函数
             def process_combination(params):
-                color, mode, long, idx = params
+                mode, long, idx = params
                 try:
-                    # 使用converter.py生成ASCII字符画
-                    ascii_art = generate_ascii_from_converter(orig_path, long, color, mode)
-                    if len(ascii_art) < long * long * 0.5:
-                        logger.error(f'生成的ASCII字符画为空 (color={color}, mode={mode}, long={long})')
-                        logger.error(f'生成的ASCII字符画: {ascii_art}')
-                        return None
+                    # 使用ascii_art_converter库生成ASCII字符画和颜色矩阵
+                    ascii_text, colors = generate_ascii_from_converter(orig_path, long, mode)
+                    if len(ascii_text) < 50:
+                        logger.error(f'生成的ASCII字符画为空 (mode={mode}, long={long})')
+                        logger.error(f'生成的ASCII字符画: {ascii_text}')
+                        raise ValueError('生成的ASCII字符画为空')
                     # 计算字符宽高
-                    lines = ascii_art.splitlines()
+                    lines = ascii_text.splitlines()
                     h_char = len(lines)
                     w_char = max(len(line) for line in lines)
-                    color_str = 'rgb' if color == 1 else 'gray' if color == 2 else 'char'
+                    color_str = 'rgb'  # 所有样本默认包含颜色矩阵
                     # 返回处理结果
                     return {
                         'prompt': prompt,
                         'orig_img': str(orig_path.relative_to(OUT_DIR)),
                         'w_char': w_char,
                         'h_char': h_char,
-                        'ascii_text': ascii_art,
+                        'ascii_text': ascii_text,
+                        'colors': colors,  # 添加颜色矩阵
                         'color': color_str,
                         'mode': mode,
                         'long_edge': long,
                         'timestamp': pd.Timestamp.now()
                     }
                 except Exception as e:
-                    logger.error(f'生成ASCII字符画失败 (color={color_str}, mode={mode}, long={long}): {e}')
+                    logger.error(f'生成ASCII字符画失败 (mode={mode}, long={long}): {e}')
                     return None
             
             # 准备所有参数组合
             combinations = []
-            for color in COLOR_OPTIONS:
-                for mode in MODES:
-                    for long in LONG_EDGE_CHARS:
-                        combinations.append((color, mode, long, combination_count))
-                        combination_count += 1
+            for mode in MODES:
+                for long in LONG_EDGE_CHARS:
+                    combinations.append((mode, long, combination_count))  # 移除color参数
+                    combination_count += 1
             
             # 使用线程池并行处理所有参数组合
             logger.info(f'并行处理 {count_img:06d}/{len(prompt)*args.n_images} 的 {len(combinations)} 个参数组合')

@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 def main():
     # 解析命令行参数
     parser = argparse.ArgumentParser(description='从ASCII字符画数据集中统计并随机读取样本')
-    parser.add_argument('--data-dir', type=str, default='e:\our0b\Projects\Python\AsciiLLM\data\ascii_art_dataset', 
+    parser.add_argument('--data-dir', type=str, default='data/ascii_art_dataset', 
                         help='数据集目录路径')
     parser.add_argument('--n', type=int, default=5, help='随机读取的样本数量')
     parser.add_argument('--show-ascii', action='store_true', default=True, 
@@ -56,7 +56,8 @@ def main():
         logger.info(f'  - {mode}: {count} ({count/total_samples*100:.1f}%)')
     logger.info(f'颜色选项分布:')
     for color, count in df['color'].value_counts().items():
-        logger.info(f'  - {"彩色" if color else "黑白"}: {count} ({count/total_samples*100:.1f}%)')
+        color_str = {'rgb' : '彩色', 'gray' : '灰度', 'char' : '字符'} [color]
+        logger.info(f'  - {color_str}: {count} ({count/total_samples*100:.1f}%)')
     logger.info(f'长边字符数分布:')
     for long_edge, count in df['long_edge'].value_counts().sort_index().items():
         logger.info(f'  - {long_edge}: {count} ({count/total_samples*100:.1f}%)')
@@ -79,7 +80,7 @@ def main():
         
         if args.show_ascii:
             logger.info(f'\nASCII字符画:')
-            logger.info(row["ascii_text"])
+            logger.info('\n' + row["ascii_text"])
             logger.info('-' * 50)
     
     return 0
