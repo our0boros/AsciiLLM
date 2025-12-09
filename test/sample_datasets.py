@@ -17,9 +17,9 @@ logger = logging.getLogger(__name__)
 def main():
     # 解析命令行参数
     parser = argparse.ArgumentParser(description='从ASCII字符画数据集中统计并随机读取样本')
-    parser.add_argument('--data-dir', type=str, default='data/ascii_art_dataset', 
+    parser.add_argument('--data-dir', type=str, default='data/ascii_arts_dataset', 
                         help='数据集目录路径')
-    parser.add_argument('--n', type=int, default=5, help='随机读取的样本数量')
+    parser.add_argument('--n', type=int, default=1, help='随机读取的样本数量')
     parser.add_argument('--show-ascii', action='store_true', default=True, 
                         help='是否显示完整的ASCII字符画内容')
     args = parser.parse_args()

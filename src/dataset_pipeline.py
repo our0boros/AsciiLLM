@@ -30,12 +30,53 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+# 模块级常量定义
+DEFAULT_OUTPUT_DIR = 'data/ascii_art_dataset'
+LONG_EDGE_CHARS = [-1, 16, 32, 64, 96]
+MODES = ['normal', 'complex', 'braille']  # 三种模式
+OUT_DIR = Path(DEFAULT_OUTPUT_DIR)  # 默认输出目录
+
+def process_combination(params):
+    """处理单个参数组合，生成ASCII字符画并返回结果字典"""
+    mode, long, idx, orig_path, prompt = params
+    try:
+        # 确保orig_path是Path对象
+        orig_path = Path(orig_path)
+        
+        # 使用ascii_art_converter库生成ASCII字符画和颜色矩阵
+        ascii_text, colors = generate_ascii_from_converter(orig_path, long, mode)
+        if len(ascii_text) < 50:
+            logger.error(f'生成的ASCII字符画为空 (mode={mode}, long={long})')
+            logger.error(f'生成的ASCII字符画: {ascii_text}')
+            raise ValueError('生成的ASCII字符画为空')
+        # 计算字符宽高
+        lines = ascii_text.splitlines()
+        h_char = len(lines)
+        w_char = max(len(line) for line in lines)
+        color_str = 'rgb'  # 所有样本默认包含颜色矩阵
+        # 返回处理结果
+        return {
+            'prompt': prompt,
+            'orig_img': str(orig_path.relative_to(OUT_DIR)),
+            'w_char': w_char,
+            'h_char': h_char,
+            'ascii_text': ascii_text,
+            'colors': colors,  # 添加颜色矩阵
+            'color': color_str,
+            'mode': mode,
+            'long_edge': long,
+            'timestamp': pd.Timestamp.now()
+        }
+    except Exception as e:
+        logger.error(f'生成ASCII字符画失败 (mode={mode}, long={long}): {e}')
+        return None
+
 # ========== 0. 参数配置 ==========
 def parse_args():
     parser = argparse.ArgumentParser(description='批量生成ASCII字符画数据集')
-    parser.add_argument('--n-prompts', type=int, default=200_000, help='生成的提示词总数')
+    parser.add_argument('--n-prompts', type=int, default=8_000, help='生成的提示词总数')
     parser.add_argument('--n-images', type=int, default=4, help='每个提示词生成的图像数量')
-    parser.add_argument('--output-dir', type=str, default='data/ascii_art_dataset', help='输出目录')
+    parser.add_argument('--output-dir', type=str, default=DEFAULT_OUTPUT_DIR, help='输出目录')
     parser.add_argument('--device', type=str, default=None, help='使用的设备(cuda/cpu)')
     parser.add_argument('--llm-name', type=str, default='models/Qwen3-1.7B', help='LLM模型名称或路径')
     parser.add_argument('--sd-model-base', type=str, default=r"models/dreamlike-diffusion-1.0", help='Stable Diffusion模型名称或路径')
@@ -257,25 +298,15 @@ def main():
     args = parse_args()
     
     # 设置输出目录
+    global OUT_DIR  # 使用全局变量
     OUT_DIR = Path(args.output_dir)
     OUT_DIR.mkdir(exist_ok=True)
     (OUT_DIR / 'orig').mkdir(exist_ok=True)
     
-    # 定义字符画参数
-    LONG_EDGE_CHARS = [-1, 16, 32, 64, 96]
-    # 移除颜色选项，所有样本默认包含颜色矩阵
-    MODES = ['normal', 'complex', 'braille']  # 三种模式
+    # LONG_EDGE_CHARS 和 MODES 已经在模块级别定义
     
     # 检查是否可以增量保存
     meta_file = OUT_DIR / 'meta.parquet'
-    existing_meta = None
-    if meta_file.exists():
-        try:
-            existing_meta = pd.read_parquet(meta_file)
-            logger.info(f'发现现有元数据，将进行增量保存。现有记录数: {len(existing_meta)}')
-        except Exception as e:
-            logger.error(f'读取现有元数据失败: {e}')
-            existing_meta = None
     
     # 加载模型
     device, tok, llm, sd_pipe = load_models(args)
@@ -287,13 +318,19 @@ def main():
     prompts_generator = generate_prompts(tok, llm, n_prompts=args.n_prompts, device=device, yield_one_by_one=True)
     
     # 确定起始索引
-    if existing_meta is not None and not existing_meta.empty:
-        # 获取现有最大索引
-        max_idx = max(int(path.stem.split('_')[0]) for path in existing_meta['orig_img'].map(lambda x: Path(x)))
-        count_img = max_idx + 1
-        logger.info(f'从索引 {count_img} 开始增量生成')
-    else:
-        count_img = 0
+    count_img = 0
+    if meta_file.exists():
+        try:
+            # 只读取orig_img列来确定起始索引，避免加载整个数据集
+            existing_orig_imgs = pd.read_parquet(meta_file, columns=['orig_img'])
+            if not existing_orig_imgs.empty:
+                # 获取现有最大索引
+                max_idx = max(int(Path(path).stem) for path in existing_orig_imgs['orig_img'])
+                count_img = max_idx + 1
+                logger.info(f'发现现有元数据，现有记录数: {len(existing_orig_imgs)}')
+                logger.info(f'从索引 {count_img} 开始增量生成')
+        except Exception as e:
+            logger.error(f'读取现有元数据失败: {e}')
     
     # 生成一个提示词处理一个图像
     for prompt in tqdm.tqdm(prompts_generator, total=args.n_prompts, desc='处理提示词'):
@@ -301,13 +338,14 @@ def main():
         
         # 逐个生成图像，而不是批量生成
         for img_idx in range(args.n_images):
-            logger.info(f'生成图像 {count_img:06d}/{len(prompt)*args.n_images} (提示词 {prompt.index(prompt)+1}/{len(prompt)}, 图像 {img_idx+1}/{args.n_images})')
+            logger.info(f'生成图像 {count_img:06d}/{len(prompt)*args.n_images} (图像 {img_idx+1}/{args.n_images})')
             
             # 生成单个图像
             try:
                 img = sd_pipe("illustration style, " + prompt, num_inference_steps=args.inference_steps).images[0]
             except Exception as e:
                 logger.error(f'生成图像时出错: {e}')
+                count_img += 1  # 即使失败也递增索引，避免覆盖
                 continue
             
             # 计算总组合数和当前图像的总进度
@@ -319,43 +357,11 @@ def main():
             img.save(orig_path, format='JPEG', quality=90)
             logger.debug(f'保存原图: {orig_path}')
             
-            # 创建一个处理参数组合的函数
-            def process_combination(params):
-                mode, long, idx = params
-                try:
-                    # 使用ascii_art_converter库生成ASCII字符画和颜色矩阵
-                    ascii_text, colors = generate_ascii_from_converter(orig_path, long, mode)
-                    if len(ascii_text) < 50:
-                        logger.error(f'生成的ASCII字符画为空 (mode={mode}, long={long})')
-                        logger.error(f'生成的ASCII字符画: {ascii_text}')
-                        raise ValueError('生成的ASCII字符画为空')
-                    # 计算字符宽高
-                    lines = ascii_text.splitlines()
-                    h_char = len(lines)
-                    w_char = max(len(line) for line in lines)
-                    color_str = 'rgb'  # 所有样本默认包含颜色矩阵
-                    # 返回处理结果
-                    return {
-                        'prompt': prompt,
-                        'orig_img': str(orig_path.relative_to(OUT_DIR)),
-                        'w_char': w_char,
-                        'h_char': h_char,
-                        'ascii_text': ascii_text,
-                        'colors': colors,  # 添加颜色矩阵
-                        'color': color_str,
-                        'mode': mode,
-                        'long_edge': long,
-                        'timestamp': pd.Timestamp.now()
-                    }
-                except Exception as e:
-                    logger.error(f'生成ASCII字符画失败 (mode={mode}, long={long}): {e}')
-                    return None
-            
             # 准备所有参数组合
             combinations = []
             for mode in MODES:
                 for long in LONG_EDGE_CHARS:
-                    combinations.append((mode, long, combination_count))  # 移除color参数
+                    combinations.append((mode, long, combination_count, orig_path, prompt))  # 添加orig_path和prompt参数
                     combination_count += 1
             
             # 使用线程池并行处理所有参数组合
@@ -373,12 +379,32 @@ def main():
             # 优化：定期保存元数据，避免内存占用过大
             if count_img % 50 == 0 and meta_list:
                 new_meta = pd.DataFrame(meta_list)
-                if existing_meta is not None and not existing_meta.empty:
-                    combined_meta = pd.concat([existing_meta, new_meta], ignore_index=True)
+                
+                if meta_file.exists():
+                    try:
+                        # 只读取现有元数据的必要部分（这里其实不需要读取内容，因为我们只是追加）
+                        # 但为了兼容旧格式，我们还是需要读取并合并
+                        # 注意：这里如果文件很大，仍然可能有内存问题
+                        # 后续可以考虑更高效的合并方式
+                        existing_meta = pd.read_parquet(meta_file)
+                        combined_meta = pd.concat([existing_meta, new_meta], ignore_index=True)
+                        combined_meta.to_parquet(meta_file, index=False)
+                        logger.info(f'增量保存元数据，新增 {len(new_meta)} 条记录')
+                    except Exception as e:
+                        logger.error(f'合并元数据失败: {e}')
+                        # 如果合并失败，尝试只保存新数据
+                        logger.warning(f'将只保存新生成的 {len(new_meta)} 条记录')
+                        # 先保存到临时文件
+                        temp_file = OUT_DIR / 'meta_temp.parquet'
+                        new_meta.to_parquet(temp_file, index=False)
+                        # 然后重命名
+                        import shutil
+                        shutil.copy2(temp_file, meta_file)
+                        temp_file.unlink()
                 else:
-                    combined_meta = new_meta
-                combined_meta.to_parquet(meta_file, index=False)
-                logger.info(f'增量保存元数据，当前共 {len(combined_meta)} 条记录')
+                    # 创建新文件
+                    new_meta.to_parquet(meta_file, index=False)
+                    logger.info(f'保存元数据，新增 {len(new_meta)} 条记录')
                 # 清空已保存的元数据列表
                 meta_list.clear()
             
@@ -388,18 +414,51 @@ def main():
     if meta_list:
         new_meta = pd.DataFrame(meta_list)
         
-        if existing_meta is not None and not existing_meta.empty:
-            # 合并现有元数据和新元数据
-            combined_meta = pd.concat([existing_meta, new_meta], ignore_index=True)
+        if meta_file.exists():
+            try:
+                # 只读取现有元数据的必要部分
+                existing_meta = pd.read_parquet(meta_file)
+                combined_meta = pd.concat([existing_meta, new_meta], ignore_index=True)
+                combined_meta.to_parquet(meta_file, index=False)
+                logger.info(f'元数据已保存: {meta_file}')
+                logger.info(f'新增 {len(new_meta)} 条记录，总记录数: {len(combined_meta)}')
+                total_generated = len(combined_meta)
+            except Exception as e:
+                logger.error(f'合并元数据失败: {e}')
+                # 如果合并失败，尝试只保存新数据
+                logger.warning(f'将只保存新生成的 {len(new_meta)} 条记录')
+                # 先保存到临时文件
+                temp_file = OUT_DIR / 'meta_temp.parquet'
+                new_meta.to_parquet(temp_file, index=False)
+                # 然后重命名
+                import shutil
+                shutil.copy2(temp_file, meta_file)
+                temp_file.unlink()
+                
+                logger.info(f'元数据已保存: {meta_file}')
+                logger.info(f'新增 {len(new_meta)} 条记录')
+                
+                # 计算总记录数
+                try:
+                    total_generated = len(pd.read_parquet(meta_file, columns=['prompt']))
+                except Exception as e:
+                    logger.error(f'计算总记录数失败: {e}')
+                    total_generated = 0
         else:
-            combined_meta = new_meta
-        
-        # 保存为parquet格式
-        combined_meta.to_parquet(meta_file, index=False)
-        logger.info(f'元数据已保存: {meta_file}')
-        logger.info(f'新增 {len(new_meta)} 条记录，总记录数: {len(combined_meta)}')
+            # 创建新文件
+            new_meta.to_parquet(meta_file, index=False)
+            logger.info(f'元数据已保存: {meta_file}')
+            logger.info(f'新增 {len(new_meta)} 条记录，总记录数: {len(new_meta)}')
+            total_generated = len(new_meta)
+    else:
+        try:
+            # 只读取一行来获取总记录数（通过文件元数据）
+            total_generated = len(pd.read_parquet(meta_file, columns=['prompt']))
+        except Exception as e:
+            logger.error(f'计算总记录数失败: {e}')
+            total_generated = 0
 
-    logger.info(f'数据生成完成！共生成 {len(meta_list)} 个ASCII字符画')
+    logger.info(f'数据生成完成！共生成 {total_generated} 个ASCII字符画')
     logger.info(f'元数据保存在: {meta_file}')
     
     # 随机采样一个样本显示
